@@ -5,10 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#1976d2" />
   <title>Control Escolar</title>
+
+  <!-- PWA manifest -->
   <link rel="manifest" href="manifest.json" />
+
+  <!-- Styles -->
   <link rel="stylesheet" href="styles.css" />
-  <script type="module" src="app.js"></script>
+
+  <!-- Import map para Firebase y jsPDF -->
+  <script type="importmap">
+  {
+    "imports": {
+      "firebase/app": "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js",
+      "firebase/auth": "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js",
+      "firebase/firestore": "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js",
+      "jspdf": "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+    }
+  }
+  </script>
 </head>
+
 <body>
   <header>
     <h1>Control Escolar</h1>
@@ -17,9 +33,10 @@
   </header>
 
   <main id="main-content">
-    <!-- Vista admin/alumno se carga según el usuario -->
+    <!-- Aquí se inyectarán las vistas de login/admin/alumno -->
   </main>
 
+  <!-- Templates -->
   <template id="login-template">
     <section class="login">
       <h2>Iniciar sesión</h2>
@@ -36,7 +53,6 @@
       <ul id="materias-list"></ul>
       <button id="nueva-materia-btn">+ Nueva materia</button>
     </section>
-
     <section id="detalle-materia" style="display:none">
       <h2 id="materia-nombre"></h2>
       <div class="tabs">
@@ -61,12 +77,16 @@
     </section>
   </template>
 
+  <!-- Script principal -->
+  <script type="module" src="./app.js"></script>
+
+  <!-- Registro del service worker -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker
           .register('service-worker.js')
-          .catch(err => console.error('SW error', err));
+          .catch(err => console.error('SW registro fallido:', err));
       });
     }
   </script>
