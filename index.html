@@ -7,24 +7,23 @@
   <title>Control Escolar</title>
 
   <!-- PWA manifest -->
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" href="./manifest.json" />
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="styles.css" />
+  <!-- Estilos -->
+  <link rel="stylesheet" href="./styles.css" />
 
-  <!-- Import map para Firebase y jsPDF -->
+  <!-- Import map para Firebase y jsPDF (versión ESM) -->
   <script type="importmap">
   {
     "imports": {
-      "firebase/app": "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js",
-      "firebase/auth": "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js",
-      "firebase/firestore": "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js",
-      "jspdf": "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+      "firebase/app":      "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js",
+      "firebase/auth":     "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js",
+      "firebase/firestore":"https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js",
+      "jspdf":             "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.es.min.js"
     }
   }
   </script>
 </head>
-
 <body>
   <header>
     <h1>Control Escolar</h1>
@@ -33,20 +32,21 @@
   </header>
 
   <main id="main-content">
-    <!-- Aquí se inyectarán las vistas de login/admin/alumno -->
+    <!-- Aquí se inyectarán las vistas de login, admin y alumno -->
   </main>
 
-  <!-- Templates -->
+  <!-- Plantilla: Login -->
   <template id="login-template">
     <section class="login">
       <h2>Iniciar sesión</h2>
-      <input type="email" id="email" placeholder="Correo" required />
+      <input type="email"    id="email"    placeholder="Correo"    required />
       <input type="password" id="password" placeholder="Contraseña" required />
       <button id="login-btn">Entrar</button>
       <p class="note">Sólo el admin puede editar. Otros usuarios solo pueden ver.</p>
     </section>
   </template>
 
+  <!-- Plantilla: Admin -->
   <template id="admin-template">
     <section id="materias-panel">
       <h2>Materias</h2>
@@ -66,6 +66,7 @@
     </section>
   </template>
 
+  <!-- Plantilla: Alumno (vista pública) -->
   <template id="alumno-template">
     <section id="vista-publica">
       <h2>Consulta de Materias</h2>
@@ -77,15 +78,15 @@
     </section>
   </template>
 
-  <!-- Script principal -->
+  <!-- Script principal (módulo ES) -->
   <script type="module" src="./app.js"></script>
 
-  <!-- Registro del service worker -->
+  <!-- Registro del Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker
-          .register('service-worker.js')
+          .register('./service-worker.js')
           .catch(err => console.error('SW registro fallido:', err));
       });
     }
