@@ -139,7 +139,8 @@ main {
   font-size: 1rem;
   color: #555;
 }
-.tab-btn.active, .tab-btn:hover {
+.tab-btn.active,
+.tab-btn:hover {
   color: #1976d2;
   border-bottom: 2px solid #1976d2;
 }
@@ -148,7 +149,8 @@ main {
 }
 
 /* Vista pública alumno */
-#vista-publica, #detalle-publico {
+#vista-publica,
+#detalle-publico {
   max-width: 800px;
   margin: 1rem auto;
   background: #fff;
@@ -170,7 +172,11 @@ main {
 
 /* Responsividad */
 @media (max-width: 600px) {
-  header, .login, #materias-panel, #detalle-materia, #vista-publica {
+  header,
+  .login,
+  #materias-panel,
+  #detalle-materia,
+  #vista-publica {
     margin: 0.5rem;
     padding: 0.75rem;
   }
