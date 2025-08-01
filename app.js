@@ -21,16 +21,15 @@ import {
   where
 } from "firebase/firestore";
 
-// Firebase config
+// --- Configuración Firebase ---
 const firebaseConfig = {
-  apiKey: "AIzaSyBbz7PuZ_MuWQTLdEeraQGlPvmH36x3538",
+  apiKey: "TU_API_KEY",
   authDomain: "escolar-67964.firebaseapp.com",
   projectId: "escolar-67964",
   storageBucket: "escolar-67964.appspot.com",
   messagingSenderId: "868955506602",
   appId: "1:868955506602:web:5f2915e2f207566ea84dd3"
 };
-
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -46,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const adminTpl       = document.getElementById("admin-template");
   const alumnoTpl      = document.getElementById("alumno-template");
   const logoutBtn      = document.getElementById("logout-btn");
+  const userInfo       = document.getElementById("user-info");
 
   document.addEventListener("click", e => {
     if (e.target.id === "login-btn")  handleLogin();
@@ -58,7 +58,6 @@ document.addEventListener("DOMContentLoaded", () => {
     signInWithEmailAndPassword(auth, email, pwd)
       .catch(err => alert("Error al iniciar sesión: " + err.message));
   }
-
   function handleLogout() {
     clearInterval(autoSaveInterval);
     signOut(auth);
@@ -69,26 +68,28 @@ document.addEventListener("DOMContentLoaded", () => {
     logoutBtn.style.display = "none";
     if (user) {
       logoutBtn.style.display = "inline-block";
+      userInfo.textContent = user.email;
       if (user.email === "fco.lopezvelazquez@gmail.com") renderAdmin();
       else renderAlumno();
     } else {
-      renderLogin();
+      userInfo.textContent = "";
+      renderAlumno();
     }
   });
 
-  function renderLogin() {
-    mainContent.append(loginTpl.content.cloneNode(true));
-  }
   function renderAdmin() {
     mainContent.append(adminTpl.content.cloneNode(true));
     initAdmin();
   }
   function renderAlumno() {
     mainContent.append(alumnoTpl.content.cloneNode(true));
-    // Aquí puedes implementar la vista pública
+    initPublicView();
+  }
+  function renderLogin() {
+    mainContent.append(loginTpl.content.cloneNode(true));
   }
 
-  // ADMIN → Materias
+  // --- ADMIN: Materias y tabs ---
   async function initAdmin() {
     const listEl  = document.getElementById("materias-list");
     const addBtn  = document.getElementById("nueva-materia-btn");
@@ -101,6 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const li = document.createElement("li");
         li.textContent = d.data().nombre;
         li.dataset.id  = d.id;
+        li.className = (d.id === currentMateriaId) ? "selected" : "";
         li.onclick     = () => loadMateria(d.id);
         listEl.append(li);
       });
@@ -119,7 +121,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const ref = doc(db, "materias", id);
 
     materiaUnsub = onSnapshot(ref, snap => {
-      document.getElementById("materia-nombre").textContent = snap.data().nombre;
+      const nombre = snap.data().nombre;
+      document.getElementById("materia-nombre-input").value = nombre;
+      document.getElementById("materia-nombre-input").onchange = async (e) => {
+        await updateDoc(ref, { nombre: e.target.value });
+      };
       setupTabs();
       selectTab("rubros");
     });
@@ -148,30 +154,29 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (tab==="evaluacion") loadEvaluacion();
     else if (tab==="pdf")        loadPdf();
   }
-
-  // Rubros
+  // --- RUBROS ---
   function loadRubros() {
     const c = document.getElementById("tab-content");
     c.innerHTML = `
       <h3>Rubros</h3>
       <div id="rubros-container"></div>
-      <button id="add-rubro-btn">+ Agregar Rubro</button>
+      <button id="add-rubro-btn" class="btn secondary">+ Agregar Rubro</button>
       <div id="rubros-sum" style="margin-top:.5rem;"></div>
     `;
-    const colR = collection(db,"materias",currentMateriaId,"rubros");
+    const colR = collection(db, "materias", currentMateriaId, "rubros");
     onSnapshot(colR, snap => {
       const ctr = document.getElementById("rubros-container");
       ctr.innerHTML = "";
       let sum=0;
       snap.forEach(d => {
-        const data=d.data(); sum+=data.valor;
+        const data=d.data(); sum+=Number(data.valor)||0;
         const div=document.createElement("div");
         div.className="rubro-item";
         div.innerHTML=`
-          <input data-field="nombre" data-id="${d.id}" class="r-input" value="${data.nombre}" />
-          <input data-field="tipo"   data-id="${d.id}" class="r-input" value="${data.tipo}" />
+          <input data-field="nombre" data-id="${d.id}" class="r-input" value="${data.nombre||''}" placeholder="Nombre" />
+          <input data-field="tipo"   data-id="${d.id}" class="r-input" value="${data.tipo||''}"   placeholder="Tipo" />
           <input type="number" min="0" max="10" step="0.1"
-            data-field="valor" data-id="${d.id}" class="r-input" value="${data.valor}" />
+            data-field="valor" data-id="${d.id}" class="r-input" value="${data.valor||0}" placeholder="Valor" />
           <button class="delete-rubro" data-id="${d.id}">Eliminar</button>
         `;
         ctr.append(div);
@@ -182,29 +187,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.getElementById("add-rubro-btn").onclick=()=>addDoc(colR,{nombre:"Nuevo rubro",tipo:"",valor:0});
   }
-
   async function updateRubro(e) {
     const id=e.target.dataset.id, fld=e.target.dataset.field;
     const val = fld==="valor"?parseFloat(e.target.value):e.target.value;
     const colR = collection(db,"materias",currentMateriaId,"rubros");
     const snap=await getDocs(colR);
     let sum=0;
-    snap.forEach(d=> sum+= d.id===id? (fld==="valor"?val:d.data().valor): d.data().valor );
+    snap.forEach(d=> sum+= d.id===id? (fld==="valor"?val:d.data().valor): Number(d.data().valor) );
     if(sum>10){ alert("Suma no puede exceder 10"); return; }
     await updateDoc(doc(db,"materias",currentMateriaId,"rubros",id),{[fld]:val});
   }
   function deleteRubro(e){
-    if(confirm("Eliminar rubro?"))
+    if(confirm("¿Eliminar rubro?"))
       deleteDoc(doc(db,"materias",currentMateriaId,"rubros",e.target.dataset.id));
   }
 
-  // Alumnos
+  // --- ALUMNOS ---
   function loadAlumnos() {
     const c = document.getElementById("tab-content");
     c.innerHTML=`
       <h3>Alumnos</h3>
       <div id="alumnos-container"></div>
-      <button id="add-alumno-btn">+ Agregar Alumno</button>
+      <button id="add-alumno-btn" class="btn secondary">+ Agregar Alumno</button>
     `;
     const colA=collection(db,"materias",currentMateriaId,"alumnos");
     onSnapshot(colA,snap=>{
@@ -232,17 +236,17 @@ document.addEventListener("DOMContentLoaded", () => {
     await updateDoc(doc(db,"materias",currentMateriaId,"alumnos",id),{[fld]:val});
   }
   function deleteAlumno(e){
-    if(confirm("Eliminar alumno?"))
+    if(confirm("¿Eliminar alumno?"))
       deleteDoc(doc(db,"materias",currentMateriaId,"alumnos",e.target.dataset.id));
   }
 
-  // Equipos
+  // --- EQUIPOS ---
   function loadEquipos() {
     const c=document.getElementById("tab-content");
     c.innerHTML=`
       <h3>Equipos</h3>
       <div id="equipos-container"></div>
-      <button id="add-equipo-btn">+ Agregar Equipo</button>
+      <button id="add-equipo-btn" class="btn secondary">+ Agregar Equipo</button>
     `;
     const colE=collection(db,"materias",currentMateriaId,"equipos");
     onSnapshot(colE,snap=>{
@@ -270,16 +274,16 @@ document.addEventListener("DOMContentLoaded", () => {
     await updateDoc(doc(db,"materias",currentMateriaId,"equipos",id),{[fld]:val});
   }
   function deleteEquipo(e){
-    if(confirm("Eliminar equipo?"))
+    if(confirm("¿Eliminar equipo?"))
       deleteDoc(doc(db,"materias",currentMateriaId,"equipos",e.target.dataset.id));
   }
 
-  // Evaluación
+  // --- EVALUACION ---
   function loadEvaluacion(){
     const c=document.getElementById("tab-content");
     c.innerHTML=`
       <h3>Evaluación</h3>
-      <select id="parcial-select">
+      <select id="parcial-select" class="a-input">
         <option value="1">Parcial 1</option>
         <option value="2">Parcial 2</option>
         <option value="3">Parcial 3</option>
@@ -327,35 +331,159 @@ document.addEventListener("DOMContentLoaded", () => {
     await updateDoc(doc(db,"materias",currentMateriaId,"alumnos",alumno),{[field]:{[parcial]:val}});
   }
 
-  // PDF
+  // --- PDF ---
   function loadPdf(){
     const c=document.getElementById("tab-content");
-    c.innerHTML='<h3>Exportar PDF</h3><button id="export-pdf-btn">Exportar a PDF</button>';
+    c.innerHTML='<h3>Exportar PDF</h3><button id="export-pdf-btn" class="btn primary">Exportar a PDF</button>';
     document.getElementById("export-pdf-btn").onclick=exportPdf;
   }
   async function exportPdf(){
     // Acceso a jsPDF global
     const { jsPDF } = window.jspdf;
-    const docPdf = new jsPDF();
+    const docPdf = new jsPDF({orientation:"landscape"});
     const matDoc = await getDoc(doc(db,"materias",currentMateriaId));
     const matName=matDoc.data().nombre;
-    docPdf.text(`Materia: ${matName}`,20,20);
+    docPdf.setFontSize(15);
+    docPdf.text(`Materia: ${matName}`,14,14);
     const rubros=await getDocs(collection(db,"materias",currentMateriaId,"rubros"));
     const alumnos=await getDocs(collection(db,"materias",currentMateriaId,"alumnos"));
     const evals=await getDocs(collection(db,"materias",currentMateriaId,"evaluaciones"));
-    let y=40;
+    let y=24;
     alumnos.forEach(a=>{
-      docPdf.text(`${a.data().lista}. ${a.data().nombre}`,20,y); y+=10;
+      docPdf.setFontSize(11);
+      docPdf.text(`${a.data().lista||""}. ${a.data().nombre}`,14,y);
+      let x=70;
       rubros.forEach(r=>{
         const ev=evals.docs.find(e=>e.data().alumno===a.id&&e.data().rubro===r.id);
-        docPdf.text(`${r.data().nombre}: ${ev?ev.data().valor:0}`,30,y); y+=10;
+        docPdf.text(`${r.data().nombre}: ${ev?ev.data().valor:0}`,x,y);
+        x+=50;
       });
       const ded=a.data().deducciones||{}, ext=a.data().extras||{};
-      Object.entries(ded).forEach(([p,v])=>{docPdf.text(`Deducciones P${p}: ${v}`,30,y); y+=10;});
-      Object.entries(ext).forEach(([p,v])=>{docPdf.text(`Extras P${p}: ${v}`,30,y); y+=10;});
-      docPdf.text("Firma: ____________",20,y); y+=20;
-      if(y>270){docPdf.addPage(); y=20;}
+      let dedStr="", extStr="";
+      Object.entries(ded).forEach(([p,v])=>{dedStr+=`P${p}: ${v} `;});
+      Object.entries(ext).forEach(([p,v])=>{extStr+=`P${p}: ${v} `;});
+      docPdf.text(`Deducciones: ${dedStr}`,14,y+8);
+      docPdf.text(`Extras: ${extStr}`,14,y+16);
+      docPdf.text("Firma: ____________________________",150,y+16);
+      y+=32;
+      if(y>185){docPdf.addPage(); y=24;}
     });
     docPdf.save(`${matName}.pdf`);
+  }
+  // ---- VISTA PÚBLICA ----
+  function initPublicView() {
+    const lista = document.getElementById("materias-publicas");
+    const detalle = document.getElementById("detalle-publico");
+    const nombre = document.getElementById("materia-publica-nombre");
+    const tabContent = document.getElementById("public-tab-content");
+
+    // Ocultar detalle al principio
+    detalle.style.display = "none";
+    // Cargar materias en tiempo real
+    onSnapshot(query(collection(db, "materias"), orderBy("nombre")), snap => {
+      lista.innerHTML = "";
+      snap.forEach(d => {
+        const li = document.createElement("li");
+        li.textContent = d.data().nombre;
+        li.onclick = () => {
+          detalle.style.display = "block";
+          nombre.textContent = d.data().nombre;
+          showPublicTab("rubros", d.id);
+          setupPublicTabs(d.id);
+        };
+        lista.append(li);
+      });
+    });
+  }
+
+  function setupPublicTabs(materiaId) {
+    document.querySelectorAll("#detalle-publico .tab-btn").forEach(b => {
+      b.onclick = () => showPublicTab(b.dataset.tab, materiaId);
+    });
+  }
+
+  function showPublicTab(tab, materiaId) {
+    document.querySelectorAll("#detalle-publico .tab-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.tab===tab);
+    });
+    const c = document.getElementById("public-tab-content");
+    c.innerHTML = "";
+    if      (tab === "rubros")    showPublicRubros(materiaId, c);
+    else if (tab === "alumnos")   showPublicAlumnos(materiaId, c);
+    else if (tab === "equipos")   showPublicEquipos(materiaId, c);
+    else if (tab === "evaluacion")showPublicEvaluacion(materiaId, c);
+  }
+
+  // --- RUBROS pública ---
+  async function showPublicRubros(materiaId, container) {
+    const rubros = await getDocs(collection(db, "materias", materiaId, "rubros"));
+    let html = "<h4>Rubros</h4><ul>";
+    rubros.forEach(r => {
+      html += `<li><b>${r.data().nombre}</b> | Tipo: ${r.data().tipo} | Valor: ${r.data().valor}</li>`;
+    });
+    html += "</ul>";
+    container.innerHTML = html;
+  }
+
+  // --- ALUMNOS pública ---
+  async function showPublicAlumnos(materiaId, container) {
+    const alumnos = await getDocs(collection(db, "materias", materiaId, "alumnos"));
+    let html = "<h4>Alumnos</h4><ul>";
+    alumnos.forEach(a => {
+      html += `<li>${a.data().lista || ""}. ${a.data().nombre}</li>`;
+    });
+    html += "</ul>";
+    container.innerHTML = html;
+  }
+
+  // --- EQUIPOS pública ---
+  async function showPublicEquipos(materiaId, container) {
+    const equipos = await getDocs(collection(db, "materias", materiaId, "equipos"));
+    let html = "<h4>Equipos</h4><ul>";
+    equipos.forEach(e => {
+      html += `<li>Equipo ${e.data().numero || ""} - Encargado: ${e.data().encargado || ""}</li>`;
+    });
+    html += "</ul>";
+    container.innerHTML = html;
+  }
+
+  // --- EVALUACIÓN pública ---
+  async function showPublicEvaluacion(materiaId, container) {
+    // Vista simple de evaluación por parcial y rubro (solo consulta)
+    const rubros = await getDocs(collection(db, "materias", materiaId, "rubros"));
+    const alumnos = await getDocs(collection(db, "materias", materiaId, "alumnos"));
+    const evals = await getDocs(collection(db, "materias", materiaId, "evaluaciones"));
+
+    let html = `
+      <h4>Calificaciones por parcial</h4>
+      <table>
+        <tr>
+          <th>Alumno</th>
+          <th>Parcial</th>
+          ${rubros.docs.map(r => `<th>${r.data().nombre}</th>`).join("")}
+          <th>Deducciones</th>
+          <th>Extras</th>
+        </tr>
+    `;
+    alumnos.forEach(a => {
+      for(let p=1;p<=4;p++) {
+        html += `<tr>
+          <td>${a.data().nombre}</td>
+          <td>${p}</td>`;
+        rubros.forEach(r => {
+          const ev = evals.docs.find(e => 
+            e.data().alumno === a.id && 
+            e.data().rubro === r.id && 
+            e.data().parcial === String(p)
+          );
+          html += `<td>${ev ? ev.data().valor : ""}</td>`;
+        });
+        const ded = (a.data().deducciones||{})[p]||"";
+        const ext = (a.data().extras||{})[p]||"";
+        html += `<td>${ded}</td><td>${ext}</td></tr>`;
+      }
+    });
+    html += "</table>";
+    container.innerHTML = html;
   }
 });

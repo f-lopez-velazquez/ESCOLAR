@@ -6,85 +6,87 @@
   <meta name="theme-color" content="#1976d2" />
   <title>Control Escolar</title>
 
-  <!-- PWA manifest -->
   <link rel="manifest" href="./manifest.json" />
-
-  <!-- Estilos -->
   <link rel="stylesheet" href="./styles.css" />
 
-  <!-- Import map SOLO para Firebase -->
+  <!-- Firebase ESM -->
   <script type="importmap">
   {
     "imports": {
-      "firebase/app":       "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js",
-      "firebase/auth":      "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js",
+      "firebase/app": "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js",
+      "firebase/auth": "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js",
       "firebase/firestore": "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js"
     }
   }
   </script>
-
-  <!-- jsPDF UMD: como variable global window.jspdf.jsPDF -->
+  <!-- jsPDF UMD (global) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>Control Escolar</h1>
-    <div id="user-info"></div>
-    <button id="logout-btn" style="display: none;">Cerrar sesión</button>
+    <div class="header-wrap">
+      <h1>Control Escolar</h1>
+      <div id="user-info"></div>
+      <button id="logout-btn" style="display: none;">Cerrar sesión</button>
+    </div>
   </header>
+  <main id="main-content"></main>
 
-  <main id="main-content">
-    <!-- Aquí se inyectan las vistas dinámicas -->
-  </main>
-
-  <!-- Templates -->
+  <!-- TEMPLATES -->
   <template id="login-template">
-    <section class="login">
+    <section class="card login-card">
       <h2>Iniciar sesión</h2>
-      <input type="email"    id="email"    placeholder="Correo"    required />
+      <input type="email" id="email" placeholder="Correo" required />
       <input type="password" id="password" placeholder="Contraseña" required />
-      <button id="login-btn">Entrar</button>
-      <p class="note">Sólo el admin puede editar. Otros usuarios solo pueden ver.</p>
+      <button id="login-btn" class="btn primary">Entrar</button>
+      <p class="note">El acceso de edición es solo para el administrador.</p>
     </section>
   </template>
   <template id="admin-template">
-    <section id="materias-panel">
-      <h2>Materias</h2>
-      <ul id="materias-list"></ul>
-      <button id="nueva-materia-btn">+ Nueva materia</button>
+    <div class="layout">
+      <aside class="side">
+        <div class="side-title">Materias</div>
+        <ul id="materias-list" class="side-list"></ul>
+        <button id="nueva-materia-btn" class="btn secondary">+ Nueva materia</button>
+      </aside>
+      <section id="detalle-materia" class="main-panel" style="display:none">
+        <div class="materia-title-edit">
+          <input id="materia-nombre-input" class="editable-title" />
+        </div>
+        <nav class="tabs">
+          <button class="tab-btn" data-tab="rubros">Rubros</button>
+          <button class="tab-btn" data-tab="alumnos">Alumnos</button>
+          <button class="tab-btn" data-tab="equipos">Equipos</button>
+          <button class="tab-btn" data-tab="evaluacion">Evaluación</button>
+          <button class="tab-btn" data-tab="pdf">Exportar PDF</button>
+        </nav>
+        <div id="tab-content"></div>
+      </section>
+    </div>
+  </template>
+  <template id="alumno-template">
+    <section id="vista-publica">
+      <h2 class="public-title">Consulta de Materias</h2>
+      <ul id="materias-publicas" class="side-list"></ul>
     </section>
-    <section id="detalle-materia" style="display:none">
-      <h2 id="materia-nombre"></h2>
-      <div class="tabs">
+    <section id="detalle-publico" class="main-panel" style="display: none">
+      <h2 id="materia-publica-nombre" class="public-title"></h2>
+      <nav class="tabs">
         <button class="tab-btn" data-tab="rubros">Rubros</button>
         <button class="tab-btn" data-tab="alumnos">Alumnos</button>
         <button class="tab-btn" data-tab="equipos">Equipos</button>
         <button class="tab-btn" data-tab="evaluacion">Evaluación</button>
-        <button class="tab-btn" data-tab="pdf">Exportar PDF</button>
-      </div>
-      <div id="tab-content"></div>
-    </section>
-  </template>
-  <template id="alumno-template">
-    <section id="vista-publica">
-      <h2>Consulta de Materias</h2>
-      <ul id="materias-publicas"></ul>
-    </section>
-    <section id="detalle-publico" style="display: none">
-      <h2 id="materia-publica-nombre"></h2>
-      <div id="contenido-publico"></div>
+      </nav>
+      <div id="public-tab-content"></div>
     </section>
   </template>
 
-  <!-- Script principal -->
   <script type="module" src="./app.js"></script>
-
-  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
-                 .catch(err => console.error('SW registro fallido:', err));
+          .catch(err => console.error('SW registro fallido:', err));
       });
     }
   </script>
