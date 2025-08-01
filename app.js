@@ -45,11 +45,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const adminTpl       = document.getElementById("admin-template");
   const alumnoTpl      = document.getElementById("alumno-template");
   const logoutBtn      = document.getElementById("logout-btn");
+  const loginHeaderBtn = document.getElementById("login-header-btn");
   const userInfo       = document.getElementById("user-info");
 
   document.addEventListener("click", e => {
     if (e.target.id === "login-btn")  handleLogin();
     if (e.target.id === "logout-btn") handleLogout();
+    if (e.target.id === "login-header-btn") renderLogin();
   });
 
   function handleLogin() {
@@ -66,6 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
   onAuthStateChanged(auth, user => {
     mainContent.innerHTML = "";
     logoutBtn.style.display = "none";
+    loginHeaderBtn.style.display = "none";
     if (user) {
       logoutBtn.style.display = "inline-block";
       userInfo.textContent = user.email;
@@ -73,6 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
       else renderAlumno();
     } else {
       userInfo.textContent = "";
+      loginHeaderBtn.style.display = "inline-block";
       renderAlumno();
     }
   });
@@ -86,10 +90,10 @@ document.addEventListener("DOMContentLoaded", () => {
     initPublicView();
   }
   function renderLogin() {
+    mainContent.innerHTML = "";
     mainContent.append(loginTpl.content.cloneNode(true));
   }
-
-  // --- ADMIN: Materias y tabs ---
+  // ---------------- ADMIN: Materias y Tabs ----------------
   async function initAdmin() {
     const listEl  = document.getElementById("materias-list");
     const addBtn  = document.getElementById("nueva-materia-btn");
@@ -154,6 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (tab==="evaluacion") loadEvaluacion();
     else if (tab==="pdf")        loadPdf();
   }
+
   // --- RUBROS ---
   function loadRubros() {
     const c = document.getElementById("tab-content");

@@ -2,14 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#1976d2" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#1565c0"/>
   <title>Control Escolar</title>
-
-  <link rel="manifest" href="./manifest.json" />
-  <link rel="stylesheet" href="./styles.css" />
-
-  <!-- Firebase ESM -->
+  <link rel="manifest" href="./manifest.json"/>
+  <link rel="stylesheet" href="./styles.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
   <script type="importmap">
   {
     "imports": {
@@ -19,27 +19,26 @@
     }
   }
   </script>
-  <!-- jsPDF UMD (global) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <header>
     <div class="header-wrap">
-      <h1>Control Escolar</h1>
+      <h1><span class="icon-book"></span> Control Escolar</h1>
       <div id="user-info"></div>
-      <button id="logout-btn" style="display: none;">Cerrar sesión</button>
+      <button id="login-header-btn" style="display:none">Iniciar sesión</button>
+      <button id="logout-btn" style="display:none">Cerrar sesión</button>
     </div>
   </header>
   <main id="main-content"></main>
-
-  <!-- TEMPLATES -->
+  <!-- Templates -->
   <template id="login-template">
     <section class="card login-card">
       <h2>Iniciar sesión</h2>
-      <input type="email" id="email" placeholder="Correo" required />
-      <input type="password" id="password" placeholder="Contraseña" required />
-      <button id="login-btn" class="btn primary">Entrar</button>
-      <p class="note">El acceso de edición es solo para el administrador.</p>
+      <input type="email" id="email" placeholder="Correo" required autocomplete="username"/>
+      <input type="password" id="password" placeholder="Contraseña" required autocomplete="current-password"/>
+      <button id="login-btn" class="btn primary w100">Entrar</button>
+      <p class="note">Acceso de edición solo para administrador autorizado.</p>
     </section>
   </template>
   <template id="admin-template">
@@ -47,11 +46,11 @@
       <aside class="side">
         <div class="side-title">Materias</div>
         <ul id="materias-list" class="side-list"></ul>
-        <button id="nueva-materia-btn" class="btn secondary">+ Nueva materia</button>
+        <button id="nueva-materia-btn" class="btn secondary w100">+ Nueva materia</button>
       </aside>
       <section id="detalle-materia" class="main-panel" style="display:none">
         <div class="materia-title-edit">
-          <input id="materia-nombre-input" class="editable-title" />
+          <input id="materia-nombre-input" class="editable-title" spellcheck="false"/>
         </div>
         <nav class="tabs">
           <button class="tab-btn" data-tab="rubros">Rubros</button>
@@ -69,7 +68,7 @@
       <h2 class="public-title">Consulta de Materias</h2>
       <ul id="materias-publicas" class="side-list"></ul>
     </section>
-    <section id="detalle-publico" class="main-panel" style="display: none">
+    <section id="detalle-publico" class="main-panel" style="display:none">
       <h2 id="materia-publica-nombre" class="public-title"></h2>
       <nav class="tabs">
         <button class="tab-btn" data-tab="rubros">Rubros</button>
@@ -80,7 +79,6 @@
       <div id="public-tab-content"></div>
     </section>
   </template>
-
   <script type="module" src="./app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
