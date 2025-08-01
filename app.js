@@ -28,7 +28,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBbz7PuZ_MuWQTLdEeraQGlPvmH36x3538",
   authDomain: "escolar-67964.firebaseapp.com",
   projectId: "escolar-67964",
-  storageBucket: "escolar-67964.appspot.com",   // <-- CORRECTO
+  storageBucket: "escolar-67964.appspot.com",
   messagingSenderId: "868955506602",
   appId: "1:868955506602:web:5f2915e2f207566ea84dd3"
 };
