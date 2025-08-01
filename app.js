@@ -1,4 +1,3 @@
-// app.js
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -16,6 +15,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  setDoc,
   query,
   orderBy,
   where
@@ -31,12 +31,10 @@ const firebaseConfig = {
   appId: "1:868955506602:web:5f2915e2f207566ea84dd3"
 };
 
-// Init Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// State
 let autoSaveInterval = null;
 let currentMateriaId = null;
 let materiaUnsub     = null;
@@ -48,7 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const alumnoTpl      = document.getElementById("alumno-template");
   const logoutBtn      = document.getElementById("logout-btn");
 
-  // Auth handlers
   document.addEventListener("click", e => {
     if (e.target.id === "login-btn")  handleLogin();
     if (e.target.id === "logout-btn") handleLogout();
@@ -72,13 +69,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (user) {
       logoutBtn.style.display = "inline-block";
       if (user.email === "fco.lopezvelazquez@gmail.com") renderAdmin();
-      else                                     renderAlumno();
+      else renderAlumno();
     } else {
       renderLogin();
     }
   });
 
-  // Renders
   function renderLogin() {
     mainContent.append(loginTpl.content.cloneNode(true));
   }
@@ -88,10 +84,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   function renderAlumno() {
     mainContent.append(alumnoTpl.content.cloneNode(true));
-    initAlumno();
+    // Aquí puedes implementar la vista pública
   }
 
-  // --- Admin: Materias ---
+  // ADMIN → Materias
   async function initAdmin() {
     const listEl  = document.getElementById("materias-list");
     const addBtn  = document.getElementById("nueva-materia-btn");
@@ -152,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (tab==="pdf")        loadPdf();
   }
 
-  // --- Rubros ---
+  // Rubros
   function loadRubros() {
     const c = document.getElementById("tab-content");
     c.innerHTML = `
@@ -201,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
       deleteDoc(doc(db,"materias",currentMateriaId,"rubros",e.target.dataset.id));
   }
 
-  // --- Alumnos ---
+  // Alumnos
   function loadAlumnos() {
     const c = document.getElementById("tab-content");
     c.innerHTML=`
@@ -239,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
       deleteDoc(doc(db,"materias",currentMateriaId,"alumnos",e.target.dataset.id));
   }
 
-  // --- Equipos ---
+  // Equipos
   function loadEquipos() {
     const c=document.getElementById("tab-content");
     c.innerHTML=`
@@ -277,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
       deleteDoc(doc(db,"materias",currentMateriaId,"equipos",e.target.dataset.id));
   }
 
-  // --- Evaluación ---
+  // Evaluación
   function loadEvaluacion(){
     const c=document.getElementById("tab-content");
     c.innerHTML=`
@@ -330,13 +326,14 @@ document.addEventListener("DOMContentLoaded", () => {
     await updateDoc(doc(db,"materias",currentMateriaId,"alumnos",alumno),{[field]:{[parcial]:val}});
   }
 
-  // --- Exportar PDF ---
+  // PDF
   function loadPdf(){
     const c=document.getElementById("tab-content");
     c.innerHTML='<h3>Exportar PDF</h3><button id="export-pdf-btn">Exportar a PDF</button>';
     document.getElementById("export-pdf-btn").onclick=exportPdf;
   }
   async function exportPdf(){
+    // Acceso a jsPDF global
     const { jsPDF } = window.jspdf;
     const docPdf = new jsPDF();
     const matDoc = await getDoc(doc(db,"materias",currentMateriaId));

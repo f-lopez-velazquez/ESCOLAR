@@ -12,7 +12,7 @@
   <!-- Estilos -->
   <link rel="stylesheet" href="./styles.css" />
 
-  <!-- Import map sólo para Firebase -->
+  <!-- Import map SOLO para Firebase -->
   <script type="importmap">
   {
     "imports": {
@@ -23,7 +23,7 @@
   }
   </script>
 
-  <!-- jsPDF UMD global (sin import ES) -->
+  <!-- jsPDF UMD: como variable global window.jspdf.jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
@@ -34,18 +34,52 @@
   </header>
 
   <main id="main-content">
-    <!-- Se inyecta login/admin/alumno -->
+    <!-- Aquí se inyectan las vistas dinámicas -->
   </main>
 
-  <!-- Templates ... mismos que antes ... -->
-  <template id="login-template"> … </template>
-  <template id="admin-template"> … </template>
-  <template id="alumno-template"> … </template>
+  <!-- Templates -->
+  <template id="login-template">
+    <section class="login">
+      <h2>Iniciar sesión</h2>
+      <input type="email"    id="email"    placeholder="Correo"    required />
+      <input type="password" id="password" placeholder="Contraseña" required />
+      <button id="login-btn">Entrar</button>
+      <p class="note">Sólo el admin puede editar. Otros usuarios solo pueden ver.</p>
+    </section>
+  </template>
+  <template id="admin-template">
+    <section id="materias-panel">
+      <h2>Materias</h2>
+      <ul id="materias-list"></ul>
+      <button id="nueva-materia-btn">+ Nueva materia</button>
+    </section>
+    <section id="detalle-materia" style="display:none">
+      <h2 id="materia-nombre"></h2>
+      <div class="tabs">
+        <button class="tab-btn" data-tab="rubros">Rubros</button>
+        <button class="tab-btn" data-tab="alumnos">Alumnos</button>
+        <button class="tab-btn" data-tab="equipos">Equipos</button>
+        <button class="tab-btn" data-tab="evaluacion">Evaluación</button>
+        <button class="tab-btn" data-tab="pdf">Exportar PDF</button>
+      </div>
+      <div id="tab-content"></div>
+    </section>
+  </template>
+  <template id="alumno-template">
+    <section id="vista-publica">
+      <h2>Consulta de Materias</h2>
+      <ul id="materias-publicas"></ul>
+    </section>
+    <section id="detalle-publico" style="display: none">
+      <h2 id="materia-publica-nombre"></h2>
+      <div id="contenido-publico"></div>
+    </section>
+  </template>
 
   <!-- Script principal -->
   <script type="module" src="./app.js"></script>
 
-  <!-- Service worker -->
+  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
